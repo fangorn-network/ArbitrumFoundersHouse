@@ -49,7 +49,33 @@ function countMatch(InEuint32[] calldata patientTypes) public {
     }
 }
 
-function getCounts() public view returns (euint32[8] memory) {
+function countMatchSpecific(InEuint32[] calldata patientTypes, InEuint32 calldata bloodType) public {
+    for (uint i = 0; i < patientTypes.length; i++) {
+        // 0, 1, 2,... 7
+        euint32 patientType = FHE.asEuint32(patientTypes[i]);
+        euint32 bloodTypeEuint = FHE.asEuint32(bloodType);
+        ebool isMatch = FHE.eq(patientType, bloodTypeEuint);
+        euint32 increment = FHE.select(isMatch, ONE, ZERO);
+        count = FHE.add(count, increment);
+    }
+    FHE.allowThis(count);
+}
+
+function reset() public {
+    count = ZERO;
+    for (uint i = 0; i < 8; i++) {
+        countArray[i] = ZERO;
+    }
+
+    FHE.allowThis(count);
+    FHE.allowSender(count);
+}
+
+function getAllTypesCount() public view returns (euint32[8] memory) {
     return countArray;
+}
+
+function getMatchedTypeCount() public view returns (euint32 finalcount) {
+    return count;
 }
 }
