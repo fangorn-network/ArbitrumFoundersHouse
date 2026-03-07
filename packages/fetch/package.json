@@ -12,7 +12,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -24,12 +26,13 @@
     "@x402/core": "^2.5.0",
     "@x402/evm": "^2.5.0",
     "@x402/fetch": "^2.5.0",
-    "fangorn-sdk": "2026.2.2-7.0"
+    "fangorn-sdk": "file:../../../ArbitrumOpenHouse-fangorn/"
   },
   "peerDependencies": {
     "viem": "^2.46.3"
   },
   "devDependencies": {
+    "@types/node": "^25.3.5",
     "viem": "2.46.3"
   }
 }

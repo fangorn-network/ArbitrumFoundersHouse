@@ -5,7 +5,7 @@ import { x402ResourceServer, HTTPFacilitatorClient } from "@x402/core/server";
 import type { HTTPRequestContext } from "@x402/core/server";
 import { createWalletClient, http } from "viem";
 import { Address, privateKeyToAccount } from "viem/accounts";
-import { computeTagCommitment, Fangorn, FangornConfig, LitEncryptionService, PinataStorage } from "fangorn-sdk";
+import { computeTagCommitment, Fangorn, FangornConfig, FhenixEncryptionService, PinataStorage } from "fangorn-sdk";
 import { FangornEvmScheme } from "./FangornEvmScheme.js";
 import { GoogleAuth } from 'google-auth-library';
 
@@ -31,7 +31,6 @@ const config = process.env.CHAIN! === FangornConfig.ArbitrumSepolia.chainName ?
 
 const app = express();
 
-// app.use(cors());
 app.use(cors({
   origin: '*', // For testing, allow all
   exposedHeaders: ['payment-required', 'payment-response', 'x402-commitment'],
@@ -40,6 +39,7 @@ app.use(cors({
 
 app.use(express.json());
 
+const isAuthProvided = process.env.GOOGLE_APPLICATION_CREDENTIALS! != undefined;
 
 const auth = new GoogleAuth();
 
@@ -50,10 +50,18 @@ async function getAuthHeaders() {
   return { verify: headers, settle: headers, supported: headers };
 }
 
-const facilitatorClient = new HTTPFacilitatorClient({
-url: facilitatorUrl,
-  createAuthHeaders: getAuthHeaders,
+let facilitatorClient = new HTTPFacilitatorClient({
+  url: facilitatorUrl,
 });
+
+// if no auth provided, do not add auth headers
+if (isAuthProvided) {
+  facilitatorClient = new HTTPFacilitatorClient({
+    url: facilitatorUrl,
+    createAuthHeaders: getAuthHeaders,
+  });
+}
+
 
 const agentCard = {
   "capabilities": {
@@ -98,11 +106,14 @@ const delegatorWalletClient = createWalletClient({
   chain: config.chain,
 });
 
-const server = new x402ResourceServer(facilitatorClient);
+const server =   new x402ResourceServer(facilitatorClient);
 server.register("eip155:*", new FangornEvmScheme());
 
-const encryptionService = await LitEncryptionService.init(config.chainName);
-const domain = process.env.RESOURCE_SERVER_DOMAIN || `localhost:${port}`;
+const encryptionService = await FhenixEncryptionService.init(
+  delegatorWalletClient,
+  config.chainName,
+);
+
 // storage via Pinata
 const storage = new PinataStorage(jwt, gateway);
 
@@ -110,7 +121,6 @@ const fangorn = await Fangorn.init(
   delegatorWalletClient,
   storage,
   encryptionService,
-  domain,
   config,
 );
 
@@ -135,14 +145,23 @@ app.use(
               const tag = resolveParam(context.adapter.getQueryParam?.("tag")).trim();
 
               const entry = await fangorn.getDataSourceData(owner, name, tag);
-              const price = entry.gadgetDescriptor.params!.price as string;
+              const price = entry.computeDescriptor.price as string;
               const commitment = await computeTagCommitment(owner, name, tag, price);
               const amount = Math.round(parseFloat(price) * 1_000_000).toString();
+
+              // fetch ciphertext based on the entry (read from IPFS)
+              const storageProvider = fangorn.getStorage();              
+              const ciphertext = await storageProvider.retrieve(entry.cid);
 
               return {
                 amount,
                 asset: usdcContractAddress,
-                extra: { name: usdcDomainName, version: "2", commitment: commitment.toString() }
+                extra: { 
+                  name: usdcDomainName, 
+                  version: "2", 
+                  commitment: commitment.toString(),
+                  ciphertext
+                }
               };
             },
             payTo: async (context: HTTPRequestContext) => {
