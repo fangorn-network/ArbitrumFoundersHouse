@@ -1,0 +1,35 @@
+{
+  "name": "@x402f/fetch",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@x402/core": "^2.5.0",
+    "@x402/evm": "^2.5.0",
+    "@x402/fetch": "^2.5.0",
+    "fangorn-sdk": "2026.2.2-7.0"
+  },
+  "peerDependencies": {
+    "viem": "^2.46.3"
+  },
+  "devDependencies": {
+    "viem": "2.46.3"
+  }
+}
