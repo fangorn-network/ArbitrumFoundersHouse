@@ -5,7 +5,7 @@ import { x402ResourceServer, HTTPFacilitatorClient } from "@x402/core/server";
 import type { HTTPRequestContext } from "@x402/core/server";
 import { createWalletClient, http } from "viem";
 import { Address, privateKeyToAccount } from "viem/accounts";
-import { computeTagCommitment, Fangorn, FangornConfig, FhenixEncryptionService, PinataStorage } from "fangorn-sdk";
+import { computeTagCommitment, Fangorn, FangornConfig, PinataStorage } from "fangorn-sdk";
 import { FangornEvmScheme } from "./FangornEvmScheme.js";
 import { GoogleAuth } from 'google-auth-library';
 
@@ -106,13 +106,8 @@ const delegatorWalletClient = createWalletClient({
   chain: config.chain,
 });
 
-const server =   new x402ResourceServer(facilitatorClient);
+const server = new x402ResourceServer(facilitatorClient);
 server.register("eip155:*", new FangornEvmScheme());
-
-const encryptionService = await FhenixEncryptionService.init(
-  delegatorWalletClient,
-  config.chainName,
-);
 
 // storage via Pinata
 const storage = new PinataStorage(jwt, gateway);
@@ -120,7 +115,6 @@ const storage = new PinataStorage(jwt, gateway);
 const fangorn = await Fangorn.init(
   delegatorWalletClient,
   storage,
-  encryptionService,
   config,
 );
 
@@ -140,7 +134,7 @@ app.use(
             scheme: "exact",
             network: `eip155:${config.caip2}`,
             price: async (context: HTTPRequestContext) => {
-              const owner = resolveParam(context.adapter.getQueryParam?.("owner")) as Address;
+              const owner = resolveParam(context.adapter.getQueryParam?.("owner")).trim() as Address;
               const name = resolveParam(context.adapter.getQueryParam?.("name")).trim();
               const tag = resolveParam(context.adapter.getQueryParam?.("tag")).trim();
 
@@ -150,22 +144,23 @@ app.use(
               const amount = Math.round(parseFloat(price) * 1_000_000).toString();
 
               // fetch ciphertext based on the entry (read from IPFS)
-              const storageProvider = fangorn.getStorage();              
+              const storageProvider = fangorn.getStorage();
               const ciphertext = await storageProvider.retrieve(entry.cid);
 
               return {
                 amount,
                 asset: usdcContractAddress,
-                extra: { 
-                  name: usdcDomainName, 
-                  version: "2", 
+                extra: {
+                  name: usdcDomainName,
+                  version: "2",
                   commitment: commitment.toString(),
                   ciphertext
                 }
               };
             },
             payTo: async (context: HTTPRequestContext) => {
-              const { owner, name } = context.adapter.getQueryParams?.() as any;
+              const owner = resolveParam(context.adapter.getQueryParam?.("owner")).trim() as Address;
+              const name = resolveParam(context.adapter.getQueryParam?.("name")).trim();
               const vault = await fangorn.getDataSource(owner, name);
               return vault.owner;
             },

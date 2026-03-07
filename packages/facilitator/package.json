@@ -25,7 +25,7 @@
     "@x402/fetch": "^2.5.0",
     "express": "^5.2.1",
     "fangorn-sdk": "file:../../../ArbitrumOpenHouse-fangorn/",
-    "viem": "^2.46.3"
+    "viem": "^2.47.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

@@ -26,13 +26,11 @@
     "@x402/core": "^2.5.0",
     "@x402/evm": "^2.5.0",
     "@x402/fetch": "^2.5.0",
-    "fangorn-sdk": "file:../../../ArbitrumOpenHouse-fangorn/"
-  },
-  "peerDependencies": {
-    "viem": "^2.46.3"
+    "fangorn-sdk": "file:../../../ArbitrumOpenHouse-fangorn/",
+    "viem": "^2.47.0"
   },
   "devDependencies": {
     "@types/node": "^25.3.5",
-    "viem": "2.46.3"
+    "tsdown": "^0.21.0"
   }
 }

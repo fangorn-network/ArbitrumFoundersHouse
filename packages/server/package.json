@@ -38,11 +38,6 @@
     "@types/node": "^25.3.5",
     "tsdown": "^0.21.0"
   },
-  "pnpm": {
-    "overrides": {
-      "viem": "2.47.0"
-    }
-  },
   "publishConfig": {
     "access": "public"
   }

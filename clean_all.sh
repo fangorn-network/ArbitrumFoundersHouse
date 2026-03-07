@@ -1,3 +1,5 @@
+rm -rf node_modules
+
 cd packages/facilitator
 rm -rf node_modules
 rm pnpm-lock.yaml

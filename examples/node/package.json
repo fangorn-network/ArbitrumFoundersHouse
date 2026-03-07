@@ -12,11 +12,6 @@
   "dependencies": {
     "@x402f/fetch": "../../packages/fetch",
     "fangorn-sdk": "file:../../../ArbitrumOpenHouse-fangorn/",
-    "viem": "2.46.3"
-  },
-  "overrides": {
-    "@x402f/fetch": {
-      "viem": "$viem"
-    }
+    "viem": "^2.47.0"
   }
 }

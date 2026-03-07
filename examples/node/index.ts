@@ -23,8 +23,6 @@ async function nodeExample() {
     const pinataJwt = getEnv("PINATA_JWT");
     const pinataGateway = getEnv("PINATA_GATEWAY");
 
-    const domain = "localhost:3000";
-
     const walletClient = createWalletClient({
         account,
         chain: config.chain,
@@ -34,7 +32,6 @@ async function nodeExample() {
     const middleware = await createFangornMiddleware(
         walletClient,
         config,
-        domain,
         pinataJwt,
         pinataGateway
     );
