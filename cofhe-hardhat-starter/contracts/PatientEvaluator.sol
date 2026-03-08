@@ -63,6 +63,7 @@ function countMatchSpecific(InEuint32[] calldata patientTypes, InEuint32 calldat
     }
     FHE.allowSender(count);
     FHE.allowThis(count);
+    FHE.allowGlobal(count);
 }
 
 function reset() public {
@@ -100,6 +101,7 @@ function retrieveDecryptedValues() public returns(uint32[8] memory decryptedVals
 }
 
 function getMatchedTypeCount() public view returns (euint32 finalcount) {
+     // Everyone can now access this valu
     return count;
 }
 }
