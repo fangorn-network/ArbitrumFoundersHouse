@@ -1,7 +1,7 @@
 import { x402Client } from "@x402/core/client";
 import { createPublicClient, http, type Address, type Hex, type WalletClient } from "viem";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
-import { AppConfig, Fangorn, LitEncryptionService, PinataStorage } from "fangorn-sdk";
+import { AppConfig, Fangorn, PinataStorage } from "fangorn-sdk";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import { ClientEvmSigner } from "@x402/evm";
 
@@ -42,12 +42,10 @@ export interface FangornMiddlewareConfig {
 }
 
 export interface FetchResourceOptions {
-    owner: Address,
-    datasourceName: string;
-    tag: string;
+    params: Record<string, string>;
     baseUrl?: string;
     endpoint?: string;
-    authToken?: string; 
+    authToken?: string;
 }
 
 export interface FetchResourceResult {
@@ -73,14 +71,16 @@ export class FangornX402Middleware {
         this.walletClient = walletClient;
     }
 
-    async init(config: AppConfig, domain: string, pinataJwt: string, pinataGateway: string): Promise<this> {
+    async init(
+        config: AppConfig,
+        pinataJwt: string,
+        pinataGateway: string
+    ): Promise<this> {
         if (this.initialized) return this;
-
-        const encryptionService = await LitEncryptionService.init(config.chainName);
 
         const storageAdapter = new PinataStorage(pinataJwt, pinataGateway);
 
-        this.fangorn = await Fangorn.init(this.walletClient, storageAdapter, encryptionService, domain, config);
+        this.fangorn = await Fangorn.init(this.walletClient, storageAdapter, config);
 
         this.fetchWithPayment = wrapFetchWithPaymentFromConfig(globalThis.fetch.bind(globalThis), {
             schemes: [{
@@ -106,27 +106,23 @@ export class FangornX402Middleware {
         this.ensureInitialized();
 
         const {
-            owner,
-            datasourceName,
-            tag,
+            params,
             baseUrl = "http://1.2.3.4:4021",
             endpoint = "/",
             authToken,
         } = options;
 
         try {
-            const params = new URLSearchParams({ owner, name: datasourceName, tag });
-            console.log(`${baseUrl}${endpoint}?${params.toString()}`,);
-            const response = await this.fetchWithPayment(
-                `${baseUrl}${endpoint}?${params.toString()}`,
-                {
-                    method: "GET",
-                    headers: { 
-                        "Accept": "application/json",
-                        "Authorization": `Bearer ${authToken}`,
-                    },
-                }
-            );
+            const urlParams = new URLSearchParams(params);
+            const url = `${baseUrl}${endpoint}?${urlParams.toString()}`;
+            console.log(url);
+            const response = await this.fetchWithPayment(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Authorization": `Bearer ${authToken}`,
+                },
+            });
 
             if (response.status === 402) {
                 return {
@@ -137,13 +133,14 @@ export class FangornX402Middleware {
             }
 
             if (response.ok) {
-                const decryptedData = await this.fangorn.decryptFile(owner, datasourceName, tag);
-                const dataString = new TextDecoder().decode(decryptedData);
-                return {
-                    success: true,
-                    data: decryptedData,
-                    dataString,
-                };
+                console.log("WE GOT AN OK RESPONSE " + JSON.stringify(response));
+                // const decryptedData = await this.fangorn.decryptFile(owner, datasourceName, tag);
+                // const dataString = new TextDecoder().decode(decryptedData);
+                // return {
+                //     success: true,
+                //     data: decryptedData,
+                //     dataString,
+                // };
             }
 
             return {
@@ -185,11 +182,10 @@ export class FangornX402Middleware {
 export async function createFangornMiddleware(
     walletClient: WalletClient,
     config: AppConfig,
-    domain: string,
     jwt: string,
     gateway: string,
 ): Promise<FangornX402Middleware> {
     const middleware = new FangornX402Middleware(walletClient);
-    await middleware.init(config, domain, jwt, gateway);
+    await middleware.init(config, jwt, gateway);
     return middleware;
 }

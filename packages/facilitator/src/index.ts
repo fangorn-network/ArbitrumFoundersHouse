@@ -17,6 +17,7 @@ app.post("/verify", async (req, res) => {
 
   try {
     const facilitator = await getFacilitator();
+    
     const { paymentPayload, paymentRequirements } = req.body as {
       paymentPayload: PaymentPayload;
       paymentRequirements: PaymentRequirements;

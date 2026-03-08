@@ -6,11 +6,11 @@ import { FangornConfig } from "fangorn-sdk";
 
 
 const getEnv = (key: string): string => {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Environment variable ${key} is not set`);
-  }
-  return value;
+    const value = process.env[key];
+    if (!value) {
+        throw new Error(`Environment variable ${key} is not set`);
+    }
+    return value;
 };
 
 const envChain = process.env.CHAIN!;
@@ -23,8 +23,6 @@ async function nodeExample() {
     const pinataJwt = getEnv("PINATA_JWT");
     const pinataGateway = getEnv("PINATA_GATEWAY");
 
-    const domain = "localhost:3000";
-
     const walletClient = createWalletClient({
         account,
         chain: config.chain,
@@ -34,19 +32,20 @@ async function nodeExample() {
     const middleware = await createFangornMiddleware(
         walletClient,
         config,
-        domain,
         pinataJwt,
         pinataGateway
     );
 
-    const owner = "0x147c24c5Ea2f1EE1ac42AD16820De23bBba45Ef6" as Address; 
+    const owner = "0x147c24c5Ea2f1EE1ac42AD16820De23bBba45Ef6" as Address;
     const datasourceName = "demo";
     const tag = "helloFangorn.txt";
 
     const result = await middleware.fetchResource({
-        owner,
-        datasourceName,
-        tag,
+        params: {
+            owner,
+            datasourceName,
+            tag,
+        },
         baseUrl: resourceServerUrl,
     });
 

@@ -89,8 +89,13 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
             const p = payload.payload as any;
             const auth = p.authorization;
 
-            const commitment = (requirements as any).extra?.commitment;
+            const extras = (requirements as any).extra; 
+            const ciphertext = extras?.ciphertext;
+            console.log('we got the ciphertext from the server: ' + JSON.stringify(ciphertext))
+            
+            const commitment = extras?.commitment;
             if (!commitment) throw new Error("Missing commitment in metadata");
+
             if (!p.signature) throw new Error("Missing signature in payload");
             const { v, r, s } = parseSignature(p.signature);
 
@@ -112,11 +117,16 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
                 ],
             });
 
+            // call fhenix contract, return result
+
             return {
                 success: true,
                 transaction: hash,
                 payer: this.signer.getAddresses()[0],
                 network: this.network,
+                extensions: {
+                    "SealedResult": "ThisIsTheSealedResult"
+                }
             };
         } catch (e) {
             return {
