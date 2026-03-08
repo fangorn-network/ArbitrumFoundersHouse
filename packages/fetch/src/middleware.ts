@@ -1,7 +1,7 @@
 import { x402Client } from "@x402/core/client";
 import { createPublicClient, http, type Address, type Hex, type WalletClient } from "viem";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
-import { AppConfig, Fangorn, PinataStorage } from "fangorn-sdk";
+import { AppConfig, Fangorn, PinataStorage } from "fangorn-fhe-sdk";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import { ClientEvmSigner } from "@x402/evm";
 
@@ -141,12 +141,14 @@ export class FangornX402Middleware {
                     const settlement = JSON.parse(
                         Buffer.from(paymentResponseHeader, "base64").toString()
                     );
-                    console.log("SealedResult:", settlement?.extensions?.SealedResult);
+                    const result = settlement?.extensions?.result;
+                    return {
+                        success: true,
+                        result 
+                    };
                 }
-                // const decryptedData = await this.fangorn.decryptFile(owner, datasourceName, tag);
-                // const dataString = new TextDecoder().decode(decryptedData);
-
-                return {
+              
+                return {    
                     success: true,
                     result: new Uint8Array()
                 };

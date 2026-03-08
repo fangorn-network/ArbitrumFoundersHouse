@@ -7,10 +7,9 @@ import {
     Network
 } from "@x402/core/types";
 import { FacilitatorEvmSigner } from "@x402/evm";
-import { FhenixEncryptionService, fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-sdk";
-import { createPublicClient, Hex, http, parseSignature, toHex, verifyTypedData } from "viem";
+import { FhenixEncryptionService, fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-fhe-sdk";
+import { Hex, parseSignature, verifyTypedData } from "viem";
 import artifact from './PatientEvaluator.json' with { type: "json" };
-import { arbitrumSepolia } from "viem/chains";
 
 export class ContentRegistryScheme implements SchemeNetworkFacilitator {
     readonly scheme = "exact";
@@ -23,7 +22,8 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
         private readonly usdcAddress: Hex,
         private readonly caip2: number,
         private readonly usdcDomain: string,
-        private readonly network: Network
+        private readonly network: Network,
+        private readonly encryptionService: FhenixEncryptionService,
     ) { }
 
     /**
@@ -95,10 +95,8 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
             const extras = (requirements as any).extra;
             const ciphertext = extras?.ciphertext;
             const fheQueryParam = extras?.fheQueryParam;
-
-            console.log('we got the fheQueryParam: ' + fheQueryParam);
-
             const commitment = extras?.commitment;
+
             if (!commitment) throw new Error("Missing commitment in metadata");
 
             if (!p.signature) throw new Error("Missing signature in payload");
@@ -126,24 +124,41 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
 
             console.log('calling contract ' + this.patientEvaluatorContractAddress);
 
+            const parsed = JSON.parse(fheQueryParam, (_, v) =>
+                typeof v === 'string' && v.endsWith('n') && !isNaN(Number(v.slice(0, -1)))
+                    ? BigInt(v.slice(0, -1))
+                    : v
+            );
+
             // call fhenix contract, return result
             const hashCountMatch = await this.signer.writeContract({
                 address: this.patientEvaluatorContractAddress,
                 abi: artifact.abi,
                 functionName: "countMatchSpecific",
-                args: [(ciphertext as any).data.data, fheQueryParam],
+                args: [(ciphertext as any).data.data, parsed.data.data[0]],
             });
 
-            const result = await this.signer.waitForTransactionReceipt({ hash: hashCountMatch })
+            await this.signer.waitForTransactionReceipt({ hash: hashCountMatch })
 
-            // read 
             const targetCount = await this.signer.readContract({
-		    	address: this.patientEvaluatorContractAddress,
-		    	abi: artifact.abi,
-		    	functionName: "getMatchedTypeCount"
-		    });
+                address: this.patientEvaluatorContractAddress,
+                abi: artifact.abi,
+                functionName: "getMatchedTypeCount",
+                args: [],
+            });
+            console.log("targetCount", targetCount);
 
-            // console.log('we got the result ' + JSON.stringify(result));
+            // unseal the result
+            const unsealed = await this.encryptionService.unseal(targetCount);
+
+            const hashReset = await this.signer.writeContract({
+                address: this.patientEvaluatorContractAddress,
+                abi: artifact.abi,
+                functionName: "reset",
+                args: [],
+            });
+
+            await this.signer.waitForTransactionReceipt({ hash: hashReset })
 
             return {
                 success: true,
@@ -151,7 +166,7 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
                 payer: this.signer.getAddresses()[0],
                 network: this.network,
                 extensions: {
-                    "SealedResult": targetCount
+                    "result": unsealed.toString()
                 }
             };
         } catch (e) {

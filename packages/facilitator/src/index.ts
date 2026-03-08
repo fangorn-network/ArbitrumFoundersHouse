@@ -2,6 +2,7 @@ import { SettleResponse, VerifyResponse } from "@x402/core/types";
 import { PaymentPayload, PaymentRequirements } from "@x402/fetch";
 import express from "express";
 import { getFacilitator } from "./facilitator.js";
+import artifact from './PatientEvaluator.json' with { type: "json" };
 
 // Initialize Express app
 const app = express();
@@ -16,7 +17,7 @@ app.use(express.json());
 app.post("/verify", async (req, res) => {
 
   try {
-    const [facilitator, fhenixEncryptionService] = await getFacilitator();
+    const facilitator = await getFacilitator();
 
     const { paymentPayload, paymentRequirements } = req.body as {
       paymentPayload: PaymentPayload;
@@ -54,7 +55,7 @@ app.post("/verify", async (req, res) => {
  */
 app.post("/settle", async (req, res) => {
   try {
-    const [facilitator, fhenixEncryptionService] = await getFacilitator();
+    const facilitator = await getFacilitator();
     const { paymentPayload, paymentRequirements } = req.body;
 
     if (!paymentPayload || !paymentRequirements) {
@@ -72,12 +73,33 @@ app.post("/settle", async (req, res) => {
       paymentRequirements as PaymentRequirements,
     );
 
-    const sealedResult = response.extensions?.sealedResult;
-    // decrypt
+    // const sealedResult = response.extensions?.sealedResult;
+    // console.log('sealedResult ' + sealedResult);
+    // // decrypt
+    // const unsealed = await fhenixEncryptionService.unseal(sealedResult);
+    // // reset 
 
-    const unsealed = fhenixEncryptionService.unseal(sealedResult);
+    // // THIS SHOULD 100% be done in the scheme
+    // // but for now this works albeit it is not very secure
+    // const hashReset2 = await wallet.writeContract({
+    //   address: process.env.PATIENT_EVALUATOR_CONTRACT_ADDR!,
+    //   abi: artifact.abi,
+    //   functionName: "reset",
+    //   chain: undefined,
+    //   account: delegatorAccount,
+    // });
+
+    // then we rebuilt the response with the unsealed output
+    // const newResponse: SettleResponse = response;
+
+    // newResponse.extensions = {
+    //   "result": unsealed.toString()
+    // };
+
+    // console.log('new response ' + JSON.stringify(newResponse))
 
     res.json(response);
+
   } catch (error) {
     console.error("Settle error:", error);
     // Check if this was an abort from hook
@@ -105,7 +127,7 @@ app.post("/settle", async (req, res) => {
  */
 app.get("/supported", async (req, res) => {
   try {
-    const [facilitator, fhenixEncryptionService] = await getFacilitator();
+    const facilitator = await getFacilitator();
     const response = facilitator.getSupported();
     res.json(response);
   } catch (error) {
