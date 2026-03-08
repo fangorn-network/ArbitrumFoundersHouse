@@ -1,14 +1,8 @@
 import { createWalletClient, http, type Hex } from "viem";
 import { Address, privateKeyToAccount } from "viem/accounts";
-// import { atob } from "node:buffer";
 import { createFangornMiddleware } from "../../packages/fetch/src/middleware.js";
-import { FangornConfig } from "fangorn-sdk";
-// import { createRequire } from "node:module";
+import { FangornConfig } from "fangorn-fhe-sdk";
 import { FheInputData, FhenixEncryptionService } from "./fhenix.js";
-
-
-// const require = createRequire(import.meta.url);
-// const { FheInputData, FhenixEncryptionService } = require("fangorn-sdk");
 
 const getEnv = (key: string): string => {
     const value = process.env[key];

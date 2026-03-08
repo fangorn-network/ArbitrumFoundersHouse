@@ -23,9 +23,9 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
-      fangorn-sdk:
-        specifier: file:../../../ArbitrumOpenHouse-fangorn/
-        version: file:../../../ArbitrumOpenHouse-fangorn(encoding@0.1.13)(express@5.2.1)(graphql@16.13.1)(zod@3.25.76)
+      fangorn-fhe-sdk:
+        specifier: ^2026.3.8
+        version: 2026.3.8(encoding@0.1.13)(express@5.2.1)(graphql@16.13.1)(zod@3.25.76)
       google-auth-library:
         specifier: ^10.6.1
         version: 10.6.1
@@ -758,8 +758,8 @@ packages:
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
 
-  fangorn-sdk@file:../../../ArbitrumOpenHouse-fangorn:
-    resolution: {directory: ../../../ArbitrumOpenHouse-fangorn, type: directory}
+  fangorn-fhe-sdk@2026.3.8:
+    resolution: {integrity: sha512-XjTwarIZX5h0IeE5Ub4Hyp7yZfv9Vct0FGsrCci4t1WZpndntnSno7BCY8xBhNKMi3jHR1GAAW2Uc9vzLmr47g==}
     engines: {node: '>=20.19.0'}
     hasBin: true
 
@@ -2411,7 +2411,7 @@ snapshots:
 
   extend@3.0.2: {}
 
-  fangorn-sdk@file:../../../ArbitrumOpenHouse-fangorn(encoding@0.1.13)(express@5.2.1)(graphql@16.13.1)(zod@3.25.76):
+  fangorn-fhe-sdk@2026.3.8(encoding@0.1.13)(express@5.2.1)(graphql@16.13.1)(zod@3.25.76):
     dependencies:
       '@a2a-js/sdk': 0.3.10(express@5.2.1)
       '@clack/prompts': 1.1.0

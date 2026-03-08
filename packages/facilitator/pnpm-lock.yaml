@@ -20,9 +20,9 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
-      fangorn-sdk:
-        specifier: file:../../../ArbitrumOpenHouse-fangorn/
-        version: file:../../../ArbitrumOpenHouse-fangorn(encoding@0.1.13)(express@5.2.1)(graphql@16.13.1)(zod@3.25.76)
+      fangorn-fhe-sdk:
+        specifier: ^2026.3.8
+        version: 2026.3.8(encoding@0.1.13)(express@5.2.1)(graphql@16.13.1)(zod@3.25.76)
       viem:
         specifier: ^2.47.0
         version: 2.47.0(zod@3.25.76)
@@ -672,8 +672,8 @@ packages:
     resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
     engines: {node: '>= 18'}
 
-  fangorn-sdk@file:../../../ArbitrumOpenHouse-fangorn:
-    resolution: {directory: ../../../ArbitrumOpenHouse-fangorn, type: directory}
+  fangorn-fhe-sdk@2026.3.8:
+    resolution: {integrity: sha512-XjTwarIZX5h0IeE5Ub4Hyp7yZfv9Vct0FGsrCci4t1WZpndntnSno7BCY8xBhNKMi3jHR1GAAW2Uc9vzLmr47g==}
     engines: {node: '>=20.19.0'}
     hasBin: true
 
@@ -2123,7 +2123,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  fangorn-sdk@file:../../../ArbitrumOpenHouse-fangorn(encoding@0.1.13)(express@5.2.1)(graphql@16.13.1)(zod@3.25.76):
+  fangorn-fhe-sdk@2026.3.8(encoding@0.1.13)(express@5.2.1)(graphql@16.13.1)(zod@3.25.76):
     dependencies:
       '@a2a-js/sdk': 0.3.10(express@5.2.1)
       '@clack/prompts': 1.1.0

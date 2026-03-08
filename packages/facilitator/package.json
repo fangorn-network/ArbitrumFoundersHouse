@@ -24,7 +24,7 @@
     "@x402/evm": "^2.5.0",
     "@x402/fetch": "^2.5.0",
     "express": "^5.2.1",
-    "fangorn-sdk": "file:../../../ArbitrumOpenHouse-fangorn/",
+    "fangorn-fhe-sdk": "^2026.3.8",
     "viem": "^2.47.0"
   },
   "devDependencies": {

@@ -7,10 +7,9 @@ import {
     Network
 } from "@x402/core/types";
 import { FacilitatorEvmSigner } from "@x402/evm";
-import { FhenixEncryptionService, fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-sdk";
+import { FhenixEncryptionService, fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-fhe-sdk";
 import { Hex, parseSignature, verifyTypedData } from "viem";
 import artifact from './PatientEvaluator.json' with { type: "json" };
-import { arbitrumSepolia } from "viem/chains";
 
 export class ContentRegistryScheme implements SchemeNetworkFacilitator {
     readonly scheme = "exact";

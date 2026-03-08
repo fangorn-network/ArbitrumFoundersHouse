@@ -2,7 +2,7 @@ import { x402Facilitator } from "@x402/core/facilitator";
 import { Network } from "@x402/core/types";
 import { toFacilitatorEvmSigner } from "@x402/evm";
 import { ExactEvmSchemeV1 } from "@x402/evm/exact/v1/facilitator";
-import { AppConfig, FangornConfig, FhenixEncryptionService } from "fangorn-sdk";
+import { AppConfig, FangornConfig, FhenixEncryptionService } from "fangorn-fhe-sdk";
 import { createWalletClient, http, publicActions, WalletClient } from "viem";
 import { Account, Address, privateKeyToAccount } from "viem/accounts";
 import { ContentRegistryScheme } from "./scheme.js";
