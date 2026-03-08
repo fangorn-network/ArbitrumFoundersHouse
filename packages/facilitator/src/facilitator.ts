@@ -24,6 +24,7 @@ async function createFacilitator(
 	usdcDomainName: string,
 	usdcContractAddress: Address,
 	settlementTrackerAddress: Address,
+	patientEvaluatorContractAddress: Address,
 ): Promise<x402Facilitator> {
 	// Create a Viem client with both wallet and public capabilities
 	const viemClient = createWalletClient({
@@ -84,6 +85,7 @@ async function createFacilitator(
 				evmSigner,
 				// settlement tracker address
 				settlementTrackerAddress as Address,
+				patientEvaluatorContractAddress as Address,
 				usdcContractAddress as Address,
 				config.caip2,
 				usdcDomainName,
@@ -114,6 +116,7 @@ export async function getFacilitator(): Promise<x402Facilitator> {
 		const usdcDomainName = process.env.USDC_DOMAIN_NAME!;
 		const usdcContractAddress = process.env.USDC_CONTRACT_ADDR!;
 		const settlementTrackerAddress = process.env.SETTLEMENT_TRACKER_ADDR!;
+		const patientEvaluatorContractAddress = process.env.PATIENT_EVALUATOR_CONTRACT_ADDR!;
 		const chainName = process.env.CHAIN!
 
 		// Initialize the EVM account from private key
@@ -136,6 +139,7 @@ export async function getFacilitator(): Promise<x402Facilitator> {
 			usdcDomainName,
 			usdcContractAddress as Address,
 			settlementTrackerAddress as Address,
+			patientEvaluatorContractAddress as Address,
 		);
 	}
 

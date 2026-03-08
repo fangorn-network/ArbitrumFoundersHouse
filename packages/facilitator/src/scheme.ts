@@ -9,6 +9,8 @@ import {
 import { FacilitatorEvmSigner } from "@x402/evm";
 import { fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-sdk";
 import { Hex, parseSignature, toHex, verifyTypedData } from "viem";
+import artifact from './PatientEvaluator.json' with { type: "json" };
+import { arbitrumSepolia } from "viem/chains";
 
 export class ContentRegistryScheme implements SchemeNetworkFacilitator {
     readonly scheme = "exact";
@@ -17,6 +19,7 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
     constructor(
         private readonly signer: FacilitatorEvmSigner,
         private readonly settlementTrackerAddress: Hex,
+        private readonly patientEvaluatorContractAddress: Hex,
         private readonly usdcAddress: Hex,
         private readonly caip2: number,
         private readonly usdcDomain: string,
@@ -89,10 +92,12 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
             const p = payload.payload as any;
             const auth = p.authorization;
 
-            const extras = (requirements as any).extra; 
+            const extras = (requirements as any).extra;
             const ciphertext = extras?.ciphertext;
-            console.log('we got the ciphertext from the server: ' + JSON.stringify(ciphertext))
-            
+            const fheQueryParam = extras?.fheQueryParam;
+
+            console.log('we got the fheQueryParam: ' + fheQueryParam);
+
             const commitment = extras?.commitment;
             if (!commitment) throw new Error("Missing commitment in metadata");
 
@@ -117,7 +122,20 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
                 ],
             });
 
+            await this.signer.waitForTransactionReceipt({ hash });
+
+            console.log('calling contract ' + this.patientEvaluatorContractAddress);
+
             // call fhenix contract, return result
+            const hashCountMatch = await this.signer.writeContract({
+                address: this.patientEvaluatorContractAddress,
+                abi: artifact.abi,
+                functionName: "countMatchSpecific",
+                args: [(ciphertext as any).data.data, fheQueryParam],
+            });
+
+            const result = await this.signer.waitForTransactionReceipt({ hash: hashCountMatch })
+            console.log('we got the result ' + JSON.stringify(result));
 
             return {
                 success: true,
@@ -141,7 +159,7 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
     getSigners(_network: string): string[] {
         return [...this.signer.getAddresses()] as string[];
     }
-    
+
     getExtra(): Record<string, unknown> | undefined {
         return undefined;
     }

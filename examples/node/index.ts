@@ -37,8 +37,8 @@ async function nodeExample() {
     );
 
     const owner = "0x147c24c5Ea2f1EE1ac42AD16820De23bBba45Ef6" as Address;
-    const datasourceName = "test-331-372026";
-    const tag = "0-bloodtypes";
+    const datasourceName = "test-856-372026";
+    const tag = "bloodtypes";
 
     const result = await middleware.fetchResource({
         params: {
@@ -47,10 +47,13 @@ async function nodeExample() {
             tag,
         },
         baseUrl: resourceServerUrl,
+        body: {
+            "fheQueryParam": "Hello there!"
+        }
     });
 
     if (result.success) {
-        console.log("Decrypted result:", atob((result as any).dataString));
+        console.log("Decrypted result:", JSON.stringify(result));
         process.exit(0)
     } else {
         console.error("Failed:", result.error);

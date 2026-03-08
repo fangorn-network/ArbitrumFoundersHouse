@@ -126,7 +126,7 @@ const resolveParam = (val: string | string[] | undefined): string => {
 app.use(
   paymentMiddleware(
     {
-      "GET /": {
+      "POST /": {
         description: "Read fangorn data",
         mimeType: "application/json",
         accepts: [
@@ -134,6 +134,9 @@ app.use(
             scheme: "exact",
             network: `eip155:${config.caip2}`,
             price: async (context: HTTPRequestContext) => {
+              const body = context.adapter.getBody?.() as any;
+              const fheQueryParam = body.fheQueryParam;
+
               const owner = resolveParam(context.adapter.getQueryParam?.("owner")).trim() as Address;
               const name = resolveParam(context.adapter.getQueryParam?.("name")).trim();
               const tag = resolveParam(context.adapter.getQueryParam?.("tag")).trim();
@@ -154,7 +157,8 @@ app.use(
                   name: usdcDomainName,
                   version: "2",
                   commitment: commitment.toString(),
-                  ciphertext
+                  ciphertext,
+                  fheQueryParam
                 }
               };
             },
@@ -173,7 +177,7 @@ app.use(
   ),
 );
 
-app.get("/", async (req, res: any) => {
+app.post("/", async (req, res: any) => {
   try {
     res.send({
       success: true,
@@ -186,7 +190,6 @@ app.get("/", async (req, res: any) => {
 
 app.get("/.well-known/agent-card.json", async (req, res) => {
   res.status(200).json(agentCard);
-
 })
 
 app.listen(port, '0.0.0.0', () => {

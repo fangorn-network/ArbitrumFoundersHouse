@@ -43,6 +43,7 @@ export interface FangornMiddlewareConfig {
 
 export interface FetchResourceOptions {
     params: Record<string, string>;
+    body: Record<string, string>,
     baseUrl?: string;
     endpoint?: string;
     authToken?: string;
@@ -109,18 +110,21 @@ export class FangornX402Middleware {
             baseUrl = "http://1.2.3.4:4021",
             endpoint = "/",
             authToken,
+            body,
         } = options;
 
         try {
             const urlParams = new URLSearchParams(params);
             const url = `${baseUrl}${endpoint}?${urlParams.toString()}`;
-            console.log(url);
+
             const response = await this.fetchWithPayment(url, {
-                method: "GET",
+                method: "POST",
                 headers: {
                     "Accept": "application/json",
                     "Authorization": `Bearer ${authToken}`,
+                    "Content-Type": "application/json"
                 },
+                body: JSON.stringify(body)
             });
 
             if (response.status === 402) {
@@ -142,7 +146,7 @@ export class FangornX402Middleware {
                 // const decryptedData = await this.fangorn.decryptFile(owner, datasourceName, tag);
                 // const dataString = new TextDecoder().decode(decryptedData);
 
-                return { 
+                return {
                     success: true,
                     result: new Uint8Array()
                 };
