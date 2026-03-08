@@ -16,7 +16,7 @@ app.use(express.json());
 app.post("/verify", async (req, res) => {
 
   try {
-    const facilitator = await getFacilitator();
+    const [facilitator, fhenixEncryptionService] = await getFacilitator();
 
     const { paymentPayload, paymentRequirements } = req.body as {
       paymentPayload: PaymentPayload;
@@ -54,7 +54,7 @@ app.post("/verify", async (req, res) => {
  */
 app.post("/settle", async (req, res) => {
   try {
-    const facilitator = await getFacilitator();
+    const [facilitator, fhenixEncryptionService] = await getFacilitator();
     const { paymentPayload, paymentRequirements } = req.body;
 
     if (!paymentPayload || !paymentRequirements) {
@@ -71,6 +71,11 @@ app.post("/settle", async (req, res) => {
       paymentPayload as PaymentPayload,
       paymentRequirements as PaymentRequirements,
     );
+
+    const sealedResult = response.extensions?.sealedResult;
+    // decrypt
+
+    const unsealed = fhenixEncryptionService.unseal(sealedResult);
 
     res.json(response);
   } catch (error) {
@@ -100,7 +105,7 @@ app.post("/settle", async (req, res) => {
  */
 app.get("/supported", async (req, res) => {
   try {
-    const facilitator = await getFacilitator();
+    const [facilitator, fhenixEncryptionService] = await getFacilitator();
     const response = facilitator.getSupported();
     res.json(response);
   } catch (error) {

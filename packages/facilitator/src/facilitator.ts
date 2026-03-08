@@ -2,7 +2,7 @@ import { x402Facilitator } from "@x402/core/facilitator";
 import { Network } from "@x402/core/types";
 import { toFacilitatorEvmSigner } from "@x402/evm";
 import { ExactEvmSchemeV1 } from "@x402/evm/exact/v1/facilitator";
-import { AppConfig, FangornConfig } from "fangorn-sdk";
+import { AppConfig, FangornConfig, FhenixEncryptionService } from "fangorn-sdk";
 import { createWalletClient, http, publicActions } from "viem";
 import { Account, Address, privateKeyToAccount } from "viem/accounts";
 import { ContentRegistryScheme } from "./scheme.js";
@@ -25,7 +25,8 @@ async function createFacilitator(
 	usdcContractAddress: Address,
 	settlementTrackerAddress: Address,
 	patientEvaluatorContractAddress: Address,
-): Promise<x402Facilitator> {
+	fhenixEncryptionService: FhenixEncryptionService
+): Promise<[x402Facilitator, FhenixEncryptionService]> {
 	// Create a Viem client with both wallet and public capabilities
 	const viemClient = createWalletClient({
 		account: evmAccount,
@@ -93,11 +94,11 @@ async function createFacilitator(
 			)
 		);
 
-	return facilitator;
+	return [facilitator, fhenixEncryptionService];
 }
 
 // Lazy initialization
-let _facilitatorPromise: Promise<x402Facilitator> | null = null;
+let _facilitatorPromise: Promise<[x402Facilitator, FhenixEncryptionService]> | null = null;
 
 /**
  * Get the configured facilitator instance
@@ -105,7 +106,7 @@ let _facilitatorPromise: Promise<x402Facilitator> | null = null;
  *
  * @returns A promise that resolves to the configured facilitator
  */
-export async function getFacilitator(): Promise<x402Facilitator> {
+export async function getFacilitator(): Promise<[x402Facilitator, FhenixEncryptionService]> {
 
 	if (!_facilitatorPromise) {
 		const privkey = process.env.FACILITATOR_EVM_PRIVATE_KEY;
@@ -132,6 +133,17 @@ export async function getFacilitator(): Promise<x402Facilitator> {
 			config = FangornConfig.BaseSepolia;
 		}
 
+		const wallet = createWalletClient({
+			account: evmAccount,
+			transport: http(config.rpcUrl),
+			chain: config.chain,
+		});
+
+		const fhenixEncryptionService = await FhenixEncryptionService.init(wallet, config.rpcUrl)
+
+
+		
+
 		_facilitatorPromise = createFacilitator(
 			config,
 			networkString as Network,
@@ -140,6 +152,7 @@ export async function getFacilitator(): Promise<x402Facilitator> {
 			usdcContractAddress as Address,
 			settlementTrackerAddress as Address,
 			patientEvaluatorContractAddress as Address,
+			fhenixEncryptionService
 		);
 	}
 

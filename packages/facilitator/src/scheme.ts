@@ -7,8 +7,8 @@ import {
     Network
 } from "@x402/core/types";
 import { FacilitatorEvmSigner } from "@x402/evm";
-import { fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-sdk";
-import { Hex, parseSignature, toHex, verifyTypedData } from "viem";
+import { FhenixEncryptionService, fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-sdk";
+import { createPublicClient, Hex, http, parseSignature, toHex, verifyTypedData } from "viem";
 import artifact from './PatientEvaluator.json' with { type: "json" };
 import { arbitrumSepolia } from "viem/chains";
 
@@ -135,7 +135,15 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
             });
 
             const result = await this.signer.waitForTransactionReceipt({ hash: hashCountMatch })
-            console.log('we got the result ' + JSON.stringify(result));
+
+            // read 
+            const targetCount = await this.signer.readContract({
+		    	address: this.patientEvaluatorContractAddress,
+		    	abi: artifact.abi,
+		    	functionName: "getMatchedTypeCount"
+		    });
+
+            // console.log('we got the result ' + JSON.stringify(result));
 
             return {
                 success: true,
@@ -143,7 +151,7 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
                 payer: this.signer.getAddresses()[0],
                 network: this.network,
                 extensions: {
-                    "SealedResult": "ThisIsTheSealedResult"
+                    "SealedResult": targetCount
                 }
             };
         } catch (e) {
