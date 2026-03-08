@@ -7,8 +7,8 @@ import {
     Network
 } from "@x402/core/types";
 import { FacilitatorEvmSigner } from "@x402/evm";
-import { fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-sdk";
-import { Hex, parseSignature, toHex, verifyTypedData } from "viem";
+import { FhenixEncryptionService, fieldToHex, SETTLEMENT_TRACKER_ABI } from "fangorn-sdk";
+import { Hex, parseSignature, verifyTypedData } from "viem";
 import artifact from './PatientEvaluator.json' with { type: "json" };
 import { arbitrumSepolia } from "viem/chains";
 
@@ -23,7 +23,8 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
         private readonly usdcAddress: Hex,
         private readonly caip2: number,
         private readonly usdcDomain: string,
-        private readonly network: Network
+        private readonly network: Network,
+        private readonly encryptionService: FhenixEncryptionService,
     ) { }
 
     /**
@@ -130,28 +131,35 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
                     : v
             );
 
-            try {
-                // call fhenix contract, return result
-                const hashCountMatch = await this.signer.writeContract({
-                    address: this.patientEvaluatorContractAddress,
-                    abi: artifact.abi,
-                    functionName: "countMatchSpecific",
-                    args: [(ciphertext as any).data.data, parsed.data.data[0]],
-                });
+            // call fhenix contract, return result
+            const hashCountMatch = await this.signer.writeContract({
+                address: this.patientEvaluatorContractAddress,
+                abi: artifact.abi,
+                functionName: "countMatchSpecific",
+                args: [(ciphertext as any).data.data, parsed.data.data[0]],
+            });
 
-                await this.signer.waitForTransactionReceipt({ hash: hashCountMatch })
+            await this.signer.waitForTransactionReceipt({ hash: hashCountMatch })
 
-                const targetCount = await this.signer.readContract({
-                    address: this.patientEvaluatorContractAddress,
-                    abi: artifact.abi,
-                    functionName: "getMatchedTypeCount",
-                    args: [],
-                });
-                console.log("targetCount", targetCount);
+            const targetCount = await this.signer.readContract({
+                address: this.patientEvaluatorContractAddress,
+                abi: artifact.abi,
+                functionName: "getMatchedTypeCount",
+                args: [],
+            });
+            console.log("targetCount", targetCount);
 
-            } catch (e) {
-                console.log(e)
-            }
+            // unseal the result
+            const unsealed = await this.encryptionService.unseal(targetCount);
+
+            const hashReset = await this.signer.writeContract({
+                address: this.patientEvaluatorContractAddress,
+                abi: artifact.abi,
+                functionName: "reset",
+                args: [],
+            });
+
+            await this.signer.waitForTransactionReceipt({ hash: hashReset })
 
             return {
                 success: true,
@@ -159,7 +167,7 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
                 payer: this.signer.getAddresses()[0],
                 network: this.network,
                 extensions: {
-                    "SealedResult": "ThisIsTheSealedResult"
+                    "result": unsealed.toString()
                 }
             };
         } catch (e) {

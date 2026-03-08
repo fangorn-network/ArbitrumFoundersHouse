@@ -141,12 +141,14 @@ export class FangornX402Middleware {
                     const settlement = JSON.parse(
                         Buffer.from(paymentResponseHeader, "base64").toString()
                     );
-                    console.log("SealedResult:", settlement?.extensions?.SealedResult);
+                    const result = settlement?.extensions?.result;
+                    return {
+                        success: true,
+                        result 
+                    };
                 }
-                // const decryptedData = await this.fangorn.decryptFile(owner, datasourceName, tag);
-                // const dataString = new TextDecoder().decode(decryptedData);
-
-                return {
+              
+                return {    
                     success: true,
                     result: new Uint8Array()
                 };

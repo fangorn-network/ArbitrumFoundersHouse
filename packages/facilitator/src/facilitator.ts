@@ -2,8 +2,8 @@ import { x402Facilitator } from "@x402/core/facilitator";
 import { Network } from "@x402/core/types";
 import { toFacilitatorEvmSigner } from "@x402/evm";
 import { ExactEvmSchemeV1 } from "@x402/evm/exact/v1/facilitator";
-import { AppConfig, FangornConfig } from "fangorn-sdk";
-import { createWalletClient, http, publicActions } from "viem";
+import { AppConfig, FangornConfig, FhenixEncryptionService } from "fangorn-sdk";
+import { createWalletClient, http, publicActions, WalletClient } from "viem";
 import { Account, Address, privateKeyToAccount } from "viem/accounts";
 import { ContentRegistryScheme } from "./scheme.js";
 
@@ -77,6 +77,8 @@ async function createFacilitator(
 
 	// Create and configure the facilitator
 
+	const fhenixEncryptionService = await FhenixEncryptionService.init(viemClient, config.rpcUrl)
+
 	const facilitator = new x402Facilitator()
 		.registerV1(network, new ExactEvmSchemeV1(evmSigner))
 		.register(
@@ -89,7 +91,8 @@ async function createFacilitator(
 				usdcContractAddress as Address,
 				config.caip2,
 				usdcDomainName,
-				`eip155:${config.caip2}`
+				`eip155:${config.caip2}`,
+				fhenixEncryptionService
 			)
 		);
 
@@ -106,7 +109,6 @@ let _facilitatorPromise: Promise<x402Facilitator> | null = null;
  * @returns A promise that resolves to the configured facilitator
  */
 export async function getFacilitator(): Promise<x402Facilitator> {
-
 	if (!_facilitatorPromise) {
 		const privkey = process.env.FACILITATOR_EVM_PRIVATE_KEY;
 		if (!privkey) {
@@ -131,6 +133,12 @@ export async function getFacilitator(): Promise<x402Facilitator> {
 			networkString = "base-sepolia";
 			config = FangornConfig.BaseSepolia;
 		}
+
+		const wallet = createWalletClient({
+			account: evmAccount,
+			transport: http(config.rpcUrl),
+			chain: config.chain,
+		});
 
 		_facilitatorPromise = createFacilitator(
 			config,
