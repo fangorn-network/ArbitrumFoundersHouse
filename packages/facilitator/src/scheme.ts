@@ -141,6 +141,7 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
     getSigners(_network: string): string[] {
         return [...this.signer.getAddresses()] as string[];
     }
+    
     getExtra(): Record<string, unknown> | undefined {
         return undefined;
     }

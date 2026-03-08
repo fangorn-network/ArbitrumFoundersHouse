@@ -17,7 +17,7 @@ app.post("/verify", async (req, res) => {
 
   try {
     const facilitator = await getFacilitator();
-    
+
     const { paymentPayload, paymentRequirements } = req.body as {
       paymentPayload: PaymentPayload;
       paymentRequirements: PaymentRequirements;
@@ -75,7 +75,6 @@ app.post("/settle", async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error("Settle error:", error);
-
     // Check if this was an abort from hook
     if (
       error instanceof Error &&

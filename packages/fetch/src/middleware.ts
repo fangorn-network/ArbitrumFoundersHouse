@@ -50,8 +50,7 @@ export interface FetchResourceOptions {
 
 export interface FetchResourceResult {
     success: boolean;
-    data?: Uint8Array;
-    dataString?: string;
+    result?: Uint8Array;
     alreadyPaid?: boolean;
     paymentResponse?: unknown;
     error?: string;
@@ -133,14 +132,20 @@ export class FangornX402Middleware {
             }
 
             if (response.ok) {
-                console.log("WE GOT AN OK RESPONSE " + JSON.stringify(response));
+                const paymentResponseHeader = response.headers.get("payment-response");
+                if (paymentResponseHeader) {
+                    const settlement = JSON.parse(
+                        Buffer.from(paymentResponseHeader, "base64").toString()
+                    );
+                    console.log("SealedResult:", settlement?.extensions?.SealedResult);
+                }
                 // const decryptedData = await this.fangorn.decryptFile(owner, datasourceName, tag);
                 // const dataString = new TextDecoder().decode(decryptedData);
-                // return {
-                //     success: true,
-                //     data: decryptedData,
-                //     dataString,
-                // };
+
+                return { 
+                    success: true,
+                    result: new Uint8Array()
+                };
             }
 
             return {
