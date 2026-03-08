@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@x402f/fetch": "../../packages/fetch",
+    "cofhejs": "^0.3.1",
     "fangorn-sdk": "file:../../../ArbitrumOpenHouse-fangorn/",
     "viem": "^2.47.0"
   }

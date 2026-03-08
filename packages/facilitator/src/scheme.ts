@@ -95,10 +95,8 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
             const extras = (requirements as any).extra;
             const ciphertext = extras?.ciphertext;
             const fheQueryParam = extras?.fheQueryParam;
-
-            console.log('we got the fheQueryParam: ' + fheQueryParam);
-
             const commitment = extras?.commitment;
+
             if (!commitment) throw new Error("Missing commitment in metadata");
 
             if (!p.signature) throw new Error("Missing signature in payload");
@@ -126,16 +124,34 @@ export class ContentRegistryScheme implements SchemeNetworkFacilitator {
 
             console.log('calling contract ' + this.patientEvaluatorContractAddress);
 
-            // call fhenix contract, return result
-            const hashCountMatch = await this.signer.writeContract({
-                address: this.patientEvaluatorContractAddress,
-                abi: artifact.abi,
-                functionName: "countMatchSpecific",
-                args: [(ciphertext as any).data.data, fheQueryParam],
-            });
+            const parsed = JSON.parse(fheQueryParam, (_, v) =>
+                typeof v === 'string' && v.endsWith('n') && !isNaN(Number(v.slice(0, -1)))
+                    ? BigInt(v.slice(0, -1))
+                    : v
+            );
 
-            const result = await this.signer.waitForTransactionReceipt({ hash: hashCountMatch })
-            console.log('we got the result ' + JSON.stringify(result));
+            try {
+                // call fhenix contract, return result
+                const hashCountMatch = await this.signer.writeContract({
+                    address: this.patientEvaluatorContractAddress,
+                    abi: artifact.abi,
+                    functionName: "countMatchSpecific",
+                    args: [(ciphertext as any).data.data, parsed.data.data[0]],
+                });
+
+                await this.signer.waitForTransactionReceipt({ hash: hashCountMatch })
+
+                const targetCount = await this.signer.readContract({
+                    address: this.patientEvaluatorContractAddress,
+                    abi: artifact.abi,
+                    functionName: "getMatchedTypeCount",
+                    args: [],
+                });
+                console.log("targetCount", targetCount);
+
+            } catch (e) {
+                console.log(e)
+            }
 
             return {
                 success: true,

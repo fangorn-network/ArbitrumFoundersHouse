@@ -1,9 +1,14 @@
 import { createWalletClient, http, type Hex } from "viem";
 import { Address, privateKeyToAccount } from "viem/accounts";
-import { atob } from "node:buffer";
+// import { atob } from "node:buffer";
 import { createFangornMiddleware } from "../../packages/fetch/src/middleware.js";
 import { FangornConfig } from "fangorn-sdk";
+// import { createRequire } from "node:module";
+import { FheInputData, FhenixEncryptionService } from "./fhenix.js";
 
+
+// const require = createRequire(import.meta.url);
+// const { FheInputData, FhenixEncryptionService } = require("fangorn-sdk");
 
 const getEnv = (key: string): string => {
     const value = process.env[key];
@@ -29,6 +34,11 @@ async function nodeExample() {
         transport: http(config.rpcUrl),
     });
 
+    const encryptionService = await FhenixEncryptionService.init(
+        walletClient,
+        config.rpcUrl,
+    );
+
     const middleware = await createFangornMiddleware(
         walletClient,
         config,
@@ -36,9 +46,15 @@ async function nodeExample() {
         pinataGateway
     );
 
-    const owner = "0x147c24c5Ea2f1EE1ac42AD16820De23bBba45Ef6" as Address;
-    const datasourceName = "test-856-372026";
     const tag = "bloodtypes";
+    const data: FheInputData =
+    {
+        tag,
+        value: [0n],
+    };
+    const encrypted = await encryptionService.encrypt(data);
+    const owner = "0x147c24c5Ea2f1EE1ac42AD16820De23bBba45Ef6" as Address;
+    const datasourceName = "local-fhe-demo";
 
     const result = await middleware.fetchResource({
         params: {
@@ -48,7 +64,9 @@ async function nodeExample() {
         },
         baseUrl: resourceServerUrl,
         body: {
-            "fheQueryParam": "Hello there!"
+            "fheQueryParam": JSON.stringify(encrypted, (_, v) =>
+                typeof v === 'bigint' ? v.toString() + 'n' : v
+            )
         }
     });
 

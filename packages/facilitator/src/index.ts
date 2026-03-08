@@ -72,6 +72,8 @@ app.post("/settle", async (req, res) => {
       paymentRequirements as PaymentRequirements,
     );
 
+    // const extne = response.extensions
+
     res.json(response);
   } catch (error) {
     console.error("Settle error:", error);
